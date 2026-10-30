@@ -2505,6 +2505,153 @@ private fun DropdownConfigField(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NotificationCategoryConfigField(
+    field: ConfigField.NotificationCategoryPicker,
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
+    val context = LocalContext.current
+    var expanded by remember { mutableStateOf(false) }
+    var categories by remember { mutableStateOf(NotificationCategoryPrefs.getAll(context)) }
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+
+    val noReplaceLabel = stringResource(R.string.opt_notif_no_replace)
+    val currentCategory = value.trim()
+    val displayLabel = currentCategory.ifEmpty { noReplaceLabel }
+
+    // Include the flow's stored category even if it came from an imported file and isn't in local prefs yet.
+    val allCategories = remember(categories, currentCategory) {
+        if (currentCategory.isNotEmpty() && categories.none { it.equals(currentCategory, ignoreCase = true) }) {
+            categories + currentCategory
+        } else {
+            categories
+        }
+    }
+
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = displayLabel,
+            onValueChange = {},
+            label = { Text(field.label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            readOnly = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(noReplaceLabel) },
+                onClick = {
+                    onValueChange("")
+                    expanded = false
+                },
+            )
+            allCategories.forEach { category ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = category,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                                categories = NotificationCategoryPrefs.remove(context, category)
+                                if (currentCategory.equals(category, ignoreCase = true)) {
+                                    onValueChange("")
+                                }
+                            },
+                        ) {
+                            Icon(
+                                Icons.Outlined.Delete,
+                                contentDescription = stringResource(R.string.action_delete),
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                    },
+                    onClick = {
+                        onValueChange(category)
+                        expanded = false
+                    },
+                )
+            }
+            HorizontalDivider()
+            DropdownMenuItem(
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                },
+                text = {
+                    Text(
+                        text = stringResource(R.string.cfg_notif_add_category),
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                },
+                onClick = {
+                    expanded = false
+                    showAddDialog = true
+                },
+            )
+        }
+    }
+
+    if (showAddDialog) {
+        var newCategoryName by rememberSaveable { mutableStateOf("") }
+        val focusRequester = remember { FocusRequester() }
+        val keyboardController = LocalSoftwareKeyboardController.current
+        LaunchedEffect(Unit) {
+            delay(100)
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false },
+            title = { Text(stringResource(R.string.cfg_notif_new_category_title)) },
+            text = {
+                OutlinedTextField(
+                    value = newCategoryName,
+                    onValueChange = { newCategoryName = it },
+                    label = { Text(stringResource(R.string.field_name)) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val trimmed = newCategoryName.trim()
+                        if (trimmed.isNotEmpty()) {
+                            categories = NotificationCategoryPrefs.add(context, trimmed)
+                            onValueChange(trimmed)
+                        }
+                        showAddDialog = false
+                    },
+                    enabled = newCategoryName.isNotBlank(),
+                ) {
+                    Text(stringResource(R.string.action_save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialog = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            },
+        )
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Variable-aware inputs: insert menu + structured condition builder
 // ---------------------------------------------------------------------------
