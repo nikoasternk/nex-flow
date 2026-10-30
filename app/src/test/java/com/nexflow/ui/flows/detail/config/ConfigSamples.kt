@@ -24,6 +24,7 @@ fun sampleConfig(fields: List<ConfigField>): Map<String, String> {
     fields.forEach { field ->
         when (field) {
             is ConfigField.TextInput -> values[field.key] = "sample"
+            is ConfigField.NotificationCategoryPicker -> values[field.key] = "status"
             is ConfigField.VariableNameInput -> values[field.key] = "counter"
             is ConfigField.ConditionInput -> values[field.key] = "{{battery}} < 20"
             is ConfigField.Dropdown -> values[field.key] = field.options.first().first
