@@ -228,6 +228,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
+import androidx.compose.material3.HorizontalDivider
+import com.nexflow.executor.NotificationActionExecutor
+import com.nexflow.prefs.NotificationCategoryPrefs
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -1786,6 +1789,19 @@ internal fun ConfigDialog(
                                 onValueChange = { values[field.key] = it },
                             )
 
+                            is ConfigField.NotificationCategoryPicker -> NotificationCategoryConfigField(
+                                field = field,
+                                value = values[field.key] ?: "",
+                                onValueChange = { newCategory ->
+                                    if (newCategory.isBlank()) {
+                                        values.remove(field.key)
+                                        values.remove(NotificationActionExecutor.KEY_SILENT_UPDATE)
+                                    } else {
+                                        values[field.key] = newCategory
+                                    }
+                                },
+                            )
+                            
                             is ConfigField.Slider -> {
                                 val current = values[field.key]?.toFloatOrNull() ?: field.min.toFloat()
                                 Column {
