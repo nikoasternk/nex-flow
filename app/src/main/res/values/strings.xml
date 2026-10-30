@@ -871,4 +871,10 @@
         <item quantity="one">%1$d of %2$d step on this device</item>
         <item quantity="other">%1$d of %2$d steps on this device</item>
     </plurals>
+    <string name="cfg_notif_replace_category">Notification replacement</string>
+    <string name="opt_notif_no_replace">Do not replace</string>
+    <string name="cfg_notif_add_category">+ Add category</string>
+    <string name="cfg_notif_new_category_title">New category</string>
+    <string name="cfg_notif_silent_update">Update without sound or vibration</string>
+    <string name="cfg_notif_silent_update_desc">Silently update the existing notification in the shade</string>
 </resources>
