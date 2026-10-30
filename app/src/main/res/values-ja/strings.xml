@@ -849,4 +849,10 @@
     <plurals name="cfg_volume_device_steps">
         <item quantity="other">この端末では %2$d 段階中 %1$d</item>
     </plurals>
+    <string name="cfg_notif_replace_category">通知の置き換え（カテゴリ）</string>
+    <string name="opt_notif_no_replace">置き換えない（常に新規）</string>
+    <string name="cfg_notif_add_category">+ カテゴリを追加</string>
+    <string name="cfg_notif_new_category_title">新しいカテゴリ</string>
+    <string name="cfg_notif_silent_update">音や振動なしで更新</string>
+    <string name="cfg_notif_silent_update_desc">既存の通知を静かに更新します</string>
 </resources>
