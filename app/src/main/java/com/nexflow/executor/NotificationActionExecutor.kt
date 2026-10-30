@@ -33,7 +33,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 /**
- * Posts a notification, optionally with somewhere to go when it is tapped (`tap_action`).
+ * Posts a notification, optionally with somewhere to go when it is tapped (`tap_action`) and
+ * optional in-place replacement by category (`replace_category` + `silent_update`).
  *
  * The tap target exists for the "and then, whenever you get round to it, do this" case: the flow
  * leaves a notification, and tapping it hands the user straight to the app, page or shortcut where
@@ -56,27 +57,37 @@ class NotificationActionExecutor @Inject constructor(
         val title = action.config["title"]?.takeIf { it.isNotBlank() } ?: "NexFlow"
         val message = action.config["message"]?.trim() ?: ""
 
-        // Unique per post, so several outstanding notifications don't overwrite each other and
-        // each keeps its own tap target.
-        val notificationId = System.currentTimeMillis().toInt()
+        val replaceCategory = action.config[KEY_REPLACE_CATEGORY]?.trim()?.takeIf { it.isNotBlank() }
+        val categoryTag = replaceCategory?.let { "$CATEGORY_TAG_PREFIX${it.lowercase().trim()}" }
+        val silentUpdate = categoryTag != null && action.config[KEY_SILENT_UPDATE] == "true"
+
+        // When a replacement category is set, pair its tag with a fixed ID so the system
+        // overwrites the existing notification for that category; otherwise use a unique ID per post.
+        val notificationId = if (categoryTag != null) {
+            REPLACEABLE_NOTIFICATION_ID
+        } else {
+            System.currentTimeMillis().toInt()
+        }
+        val requestCode = categoryTag?.hashCode() ?: notificationId
         val tapTarget = resolveTapTarget(action)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ACTIONS)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
+            .setOnlyAlertOnce(silentUpdate)
             .apply {
                 if (message.isNotBlank()) {
                     setContentText(message)
                     setStyle(NotificationCompat.BigTextStyle().bigText(message))
                 }
-                (tapTarget as? TapTarget.Go)?.let { setContentIntent(pendingIntentFor(it.intent, notificationId)) }
+                (tapTarget as? TapTarget.Go)?.let { setContentIntent(pendingIntentFor(it.intent, requestCode)) }
             }
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .build()
 
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.notify(notificationId, notification)
+        nm.notify(categoryTag, notificationId, notification)
 
         // Posted either way — a broken tap target is no reason to withhold the reminder itself.
         // The run is still reported as failed so the log says why tapping does nothing.
@@ -134,6 +145,11 @@ class NotificationActionExecutor @Inject constructor(
 
     companion object {
         const val CHANNEL_ACTIONS = "nexflow_actions"
+        const val REPLACEABLE_NOTIFICATION_ID = 1001
+        const val CATEGORY_TAG_PREFIX = "nexflow_cat_"
+
+        const val KEY_REPLACE_CATEGORY = "replace_category"
+        const val KEY_SILENT_UPDATE = "silent_update"
 
         /** `tap_action` config values — what tapping the notification does. */
         const val TAP_NONE = "NONE"
