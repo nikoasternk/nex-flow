@@ -150,6 +150,16 @@ fun ActionType.info(context: Context): ActionInfo = when (this) {
         listOf(
             ConfigField.TextInput("title", context.getString(R.string.cfg_title)),
             ConfigField.TextInput("message", context.getString(R.string.cfg_message), multiline = true),
+            ConfigField.NotificationCategoryPicker(
+                key = NotificationActionExecutor.KEY_REPLACE_CATEGORY,
+                label = context.getString(R.string.cfg_notif_replace_category),
+            ),
+            ConfigField.Toggle(
+                key = NotificationActionExecutor.KEY_SILENT_UPDATE,
+                label = context.getString(R.string.cfg_notif_silent_update),
+                description = context.getString(R.string.cfg_notif_silent_update_desc),
+                showWhenKey = NotificationActionExecutor.KEY_REPLACE_CATEGORY,
+            ),
             // What tapping the notification does. Turns a reminder into the handoff to whatever
             // the user has to do next, at whatever time they get to it.
             ConfigField.Dropdown(
