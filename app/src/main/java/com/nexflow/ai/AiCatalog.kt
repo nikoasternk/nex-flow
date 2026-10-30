@@ -79,10 +79,15 @@ object AiCatalog {
     private fun fieldsSpec(fields: List<ConfigField>): String {
         val specs = fields.mapNotNull { field ->
             fieldSpec(field)?.let { spec ->
-                // A conditional field only applies for one value of the field it depends on;
-                // without saying so the model fills it in unconditionally.
+                // A conditional field only applies for one value (or any non-blank value) of the
+                // field it depends on; without saying so the model fills it in unconditionally.
                 if (field.showWhenKey != null) {
-                    "$spec (only when ${field.showWhenKey}=${field.showWhenValue})"
+                    val condition = if (field.showWhenValue != null) {
+                        "${field.showWhenKey}=${field.showWhenValue}"
+                    } else {
+                        "${field.showWhenKey} is set"
+                    }
+                    "$spec (only when $condition)"
                 } else {
                     spec
                 }
@@ -94,6 +99,7 @@ object AiCatalog {
     /** Compact one-fragment spec for a field, or null for display-only fields. */
     fun fieldSpec(field: ConfigField): String? = when (field) {
         is ConfigField.TextInput -> "${field.key}:text"
+        is ConfigField.NotificationCategoryPicker -> "${field.key}:text"
         is ConfigField.VariableNameInput -> "${field.key}:variable-name (bare name; prefix g: for a global)"
         is ConfigField.ConditionInput ->
             "${field.key}:condition\"{{var}} < 20\" (operators ==,!=,<,<=,>,>=; empty right side = truthy check)"
