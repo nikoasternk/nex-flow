@@ -23,7 +23,8 @@ sealed class ConfigField {
 
     /**
      * Conditional visibility: the field is only rendered (and only then captures input) while the
-     * value under [showWhenKey] equals [showWhenValue]. A null key means "always shown".
+     * value under [showWhenKey] equals [showWhenValue], or holds any non-blank value when
+     * [showWhenValue] is null. A null key means "always shown".
      *
      * Fields that never need it inherit the default rather than declaring it, so a field list
      * reads as a flat list of inputs until one genuinely depends on another.
@@ -34,7 +35,8 @@ sealed class ConfigField {
     /** Whether this field should be shown given the dialog's current values. */
     fun isVisible(values: Map<String, String>): Boolean {
         val key = showWhenKey ?: return true
-        return values[key] == showWhenValue
+        val expected = showWhenValue ?: return !values[key].isNullOrBlank()
+        return values[key] == expected
     }
 
     data class TextInput(
@@ -51,6 +53,15 @@ sealed class ConfigField {
         override val label: String,
         /** List of (storedValue, displayLabel) pairs. */
         val options: List<Pair<String, String>>,
+    ) : ConfigField()
+
+    /**
+     * Selector for user-created notification replacement categories stored in
+     * [com.nexflow.prefs.NotificationCategoryPrefs]. Blank value means "do not replace".
+     */
+    data class NotificationCategoryPicker(
+        override val key: String,
+        override val label: String,
     ) : ConfigField()
 
     /**
@@ -209,6 +220,8 @@ sealed class ConfigField {
         override val key: String,
         override val label: String,
         val description: String = "",
+        override val showWhenKey: String? = null,
+        override val showWhenValue: String? = null,
     ) : ConfigField()
 
     /**
