@@ -849,4 +849,10 @@
     <plurals name="cfg_volume_device_steps">
         <item quantity="other">这台设备上为 %2$d 段中的第 %1$d 段</item>
     </plurals>
+    <string name="cfg_notif_replace_category">替换通知（类别）</string>
+    <string name="opt_notif_no_replace">不替换（总是新建通知）</string>
+    <string name="cfg_notif_add_category">+ 添加类别</string>
+    <string name="cfg_notif_new_category_title">新建类别</string>
+    <string name="cfg_notif_silent_update">静音更新（无声音和振动）</string>
+    <string name="cfg_notif_silent_update_desc">在通知栏中静默更新现有通知</string>
 </resources>
